@@ -5,24 +5,25 @@
 #include <cstddef>
 #include <map>
 #include <set>
-#include <unordered_map>
 
 class Dfa : public Graph
 {
 public:
-    Dfa(Node* head = nullptr, size_t num_nodes = 0)
+    Dfa(Node* head = nullptr, size_t num_nodes = 0, std::set<char> alphabet_set = {})
         : Graph(head, num_nodes)
-        , alphabet_set_({'a', 'b', 'c'})
+        , alphabet_set_(alphabet_set)
     {}
 
     Dfa(Nfa& nfa)
-        : alphabet_set_({'a', 'b'})   // 'c'
+        : alphabet_set_(nfa.get_alphabet_set())
     {
         std::vector<Node*>            dfaNode;
         std::vector<std::set<size_t>> dtran;
         std::set<size_t>              T    = nfa.EpsilonClosure(nfa.head()->id());
-        Node*                         node = new Node(num_nodes_++, Dfa::TYPE::START);
+        Node*                         node = new Node(num_nodes_++, 0);
         size_t                        now  = 0;
+        std::set<size_t>              left_types;
+        // std::set<size_t>              f    = nfa.get_tails();
 
         dtran.push_back(T);
         dfaNode.push_back(node);
@@ -31,12 +32,12 @@ public:
             T = dtran[now];
             for (const char& c : alphabet_set_) {
                 std::set<size_t> next = nfa.EpsilonClosure(nfa.Move(T, c));
-                Dfa::TYPE        type = Dfa::TYPE::NORMAL;
+                size_t           type = 0;
                 if (!next.empty()) {
-                    if (next.find(nfa.tail()->id()) != next.end())
-                        type = Dfa::TYPE::END;
-                    else
-                        type = Dfa::TYPE::NORMAL;
+                    for (size_t i : next) {
+                        type = std::max(nfa.get_node(i)->type(), type);
+                        left_types.insert(type);
+                    }
                     int next_pos = is_in_dtran(dtran, next);
                     if (next_pos == -1) {
                         dtran.push_back(next);
@@ -51,6 +52,7 @@ public:
             }
             ++now;
         }
+        types = left_types.size();
         head_ = dfaNode[0];
     }
 
@@ -63,29 +65,27 @@ public:
             head = Move(head, c);
             if (head == nullptr) return false;
         }
-        return head->type() == END;
+        return head->type() != 0;
     }
 
 
     Dfa minimize()
     {
+
+        std::queue<Node*>   q;
+        std::vector<size_t> flag(num_nodes_, 0);
+
         std::map<std::set<size_t>, Node*> map;
-        std::set<size_t>                  s, f;
-        std::queue<Node*>                 q;
-        std::vector<size_t>               flag(num_nodes_, 0);
         std::stack<std::set<size_t>>      st;
         size_t                            count = 0;
-        std::vector<std::set<size_t>>     current_sets;
+        std::vector<std::set<size_t>>     current_sets(types);
 
-        q.push(head_);
         flag[head_->id()] = 1;
+        q.push(head_);
         while (!q.empty()) {
             Node* now = q.front();
             q.pop();
-            if (now->type() == END)
-                f.insert(now->id());
-            else
-                s.insert(now->id());
+            current_sets[now->type()].insert(now->id());
             for (std::pair<Node*, char>& next : now->next()) {
                 if (flag[next.first->id()] == 0) {
                     q.push(next.first);
@@ -93,16 +93,15 @@ public:
                 }
             }
         }
-        st.push(s);
-        st.push(f);
-        current_sets.push_back(s);
-        current_sets.push_back(f);
+        for (auto& i : current_sets) {
+            st.push(i);
+        }
 
         while (!st.empty()) {
             std::set<size_t> now = st.top();
             st.pop();
             if (now.size() == 1) {
-                map[now] = new Node(count++, NORMAL);
+                map[now] = new Node(count++, get_node(*now.begin())->type());
             }
             else {
                 bool is_same = true;
@@ -122,18 +121,20 @@ public:
                     }
                 }
                 if (is_same) {
-                    map[now] = new Node(count++, NORMAL);
+                    size_t type = 0;
+                    for (auto& i : now) {
+                        type = std::max(type, get_node(i)->type());
+                    }
+                    map[now] = new Node(count++, type);
                 }
             }
         }
         Node* new_head = nullptr;
         for (auto& entry : map) {
             for (auto& id : entry.first) {
-                if (get_node(id)->type() == END)
-                    entry.second->set_type(END);
-                else if (get_node(id)->type() == START) {
-                    entry.second->set_type(START);
+                if (id == head_->id()) {
                     new_head = entry.second;
+                    break;
                 }
             }
             for (const char& c : alphabet_set_) {
@@ -143,20 +144,12 @@ public:
                 }
             }
         }
-        return Dfa(new_head, count);
+        return Dfa(new_head, count, alphabet_set_);
     }
 
-public:
-    enum TYPE
-    {
-        START,
-        NORMAL,
-        END,
-    };
-
 private:
-    std::vector<char> alphabet_set_;
-    std::set<size_t>  tail_;
+    std::set<char> alphabet_set_;
+    size_t         types;
 
     /**
      * @description: from node now, find the node that can be reached by char c, this only use in

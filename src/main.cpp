@@ -1,19 +1,30 @@
 /*
  * @Author: zhanghan zhangh.coder@outlook.com
  * @Date: 2023-10-25 15:12:34
- * @FilePath: /algo_ds/src/main.cpp
+ * @FilePath: /compiler_algo/src/main.cpp
  * @Description:
  *
  * Copyright (c) 2023 by zhanghan, All Rights Reserved.
  */
 #include "RegularParser.hpp"
-#include <regex>
 
 int main()
-{   //
-    RegularParser regularParser("aa*(a|b)*");
-    Nfa           nfa = regularParser.Regular2Nfa();
+{
+    std::vector<std::string> regulars = {
+        // the higher index have a bigger priority
+        "ab",
+        "aaa*b",
+    };
+    RegularParser regularParsers(regulars);
+    Nfa           nfa = regularParsers.Regulars2Nfa();
     nfa.print();
+    std::cout << nfa.Match("aab") << std::endl;
+
+    // RegularParser regularParser("ab");
+    // Nfa           nfa = regularParser.Regular2Nfa();
+    // nfa.print();
+    // std::cout << nfa.Match("ab") << std::endl;
+
     Dfa dfa(nfa);
     dfa.print();
 
