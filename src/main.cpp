@@ -7,10 +7,11 @@
  * Copyright (c) 2023 by zhanghan, All Rights Reserved.
  */
 #include "RegularParser.hpp"
+#include <regex>
 
 int main()
-{   // ((a|b)(a|b|c)*)|(c(b|c)*((a(b|c)*)|((b|c)*)))
-    RegularParser regularParser("aa*(bab*a)*(a|b)b*");
+{   //
+    RegularParser regularParser("aa*(a|b)*");
     Nfa           nfa = regularParser.Regular2Nfa();
     nfa.print();
     Dfa dfa(nfa);
@@ -19,6 +20,9 @@ int main()
     Dfa minDfa = dfa.minimize();
     minDfa.print();
 
-    std::cout << std::boolalpha << dfa.Match("ababbabbb") << std::endl;
+    // std::regex re("aa*(bab*a)*(a|b)b*");
+    // std::cout << std::boolalpha << std::regex_match("ababbabbb", re) << std::endl;
+    // std::cout << std::boolalpha << dfa.Match("ababbabbb") << std::endl;
+
     return 0;
 }

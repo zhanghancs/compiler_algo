@@ -16,7 +16,7 @@ public:
     {}
 
     Dfa(Nfa& nfa)
-        : alphabet_set_({'a', 'b', 'c'})
+        : alphabet_set_({'a', 'b'})   // 'c'
     {
         std::vector<Node*>            dfaNode;
         std::vector<std::set<size_t>> dtran;

@@ -27,6 +27,7 @@ public:
     ~Graph(){};
 
     void set_head(Node* head) { head_ = head; }
+    // void set_tail(Node* tail) { tail_ = tail; }
 
     Node* head() { return head_; }
 

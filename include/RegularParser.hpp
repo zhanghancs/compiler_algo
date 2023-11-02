@@ -4,7 +4,6 @@
 #include "Nfa.hpp"
 #include <algorithm>
 #include <assert.h>
-#include <bits/types/FILE.h>
 #include <iostream>
 #include <set>
 #include <stack>
@@ -17,7 +16,7 @@ public:
     RegularParser(std::string regular_)
         : regular_(regular_)
         , nfa_id_(0)
-        , dfa_id_(0)
+    // , dfa_id_(0)
     {}
     ~RegularParser(){
 
@@ -52,57 +51,57 @@ public:
             calc(op, val);
         }
         assert(val.size() == 1);
-        nfa_ = val.top();
-        return nfa_;
+        // nfa_ = val.top();
+        return val.top();
     }
 
-    Dfa Nfa2Dfa()
-    {
-        std::vector<Node*>            dfaNode;
-        std::vector<std::set<size_t>> dtran;
-        std::set<size_t>              T    = nfa_.EpsilonClosure(nfa_.head()->id());
-        Node*                         node = new Node(dfa_id_++, Dfa::TYPE::START);
-        size_t                        now  = 0;
+    // Dfa Nfa2Dfa()
+    // {
+    //     std::vector<Node*>            dfaNode;
+    //     std::vector<std::set<size_t>> dtran;
+    //     std::set<size_t>              T    = nfa_.EpsilonClosure(nfa_.head()->id());
+    //     Node*                         node = new Node(dfa_id_++, Dfa::TYPE::START);
+    //     size_t                        now  = 0;
 
-        dtran.push_back(T);
-        dfaNode.push_back(node);
+    //     dtran.push_back(T);
+    //     dfaNode.push_back(node);
 
-        while (now < dfa_id_) {
-            T = dtran[now];
-            for (const char& c : alphabet_set_) {
-                std::set<size_t> next = nfa_.EpsilonClosure(nfa_.Move(T, c));
-                Dfa::TYPE        type = Dfa::TYPE::NORMAL;
-                if (!next.empty()) {
-                    if (next.find(nfa_.tail()->id()) != next.end())
-                        type = Dfa::TYPE::END;
-                    else
-                        type = Dfa::TYPE::NORMAL;
-                    int next_pos = is_in_dtran(dtran, next);
-                    if (next_pos == -1) {
-                        dtran.push_back(next);
-                        node = new Node(dfa_id_++, type);
-                        dfaNode[now]->add_next(node, c);
-                        dfaNode.push_back(node);
-                    }
-                    else {
-                        dfaNode[now]->add_next(dfaNode[next_pos], c);
-                    }
-                }
-            }
-            ++now;
-        }
-        dfa_ = Dfa(dfaNode[0], dfa_id_);
-        return dfa_;
-    }
+    //     while (now < dfa_id_) {
+    //         T = dtran[now];
+    //         for (const char& c : alphabet_set_) {
+    //             std::set<size_t> next = nfa_.EpsilonClosure(nfa_.Move(T, c));
+    //             Dfa::TYPE        type = Dfa::TYPE::NORMAL;
+    //             if (!next.empty()) {
+    //                 if (next.find(nfa_.tail()->id()) != next.end())
+    //                     type = Dfa::TYPE::END;
+    //                 else
+    //                     type = Dfa::TYPE::NORMAL;
+    //                 int next_pos = is_in_dtran(dtran, next);
+    //                 if (next_pos == -1) {
+    //                     dtran.push_back(next);
+    //                     node = new Node(dfa_id_++, type);
+    //                     dfaNode[now]->add_next(node, c);
+    //                     dfaNode.push_back(node);
+    //                 }
+    //                 else {
+    //                     dfaNode[now]->add_next(dfaNode[next_pos], c);
+    //                 }
+    //             }
+    //         }
+    //         ++now;
+    //     }
+    //     dfa_ = Dfa(dfaNode[0], dfa_id_);
+    //     return dfa_;
+    // }
 
 private:
     std::string regular_;
     size_t      nfa_id_;
-    size_t      dfa_id_;
-    Nfa         nfa_;
-    Dfa         dfa_;
+    // size_t      dfa_id_;
+    // Nfa         nfa_;
+    // Dfa         dfa_;
 
-    const std::vector<char> alphabet_set_ = {'a', 'b', 'c'};
+    // const std::vector<char> alphabet_set_ = {'a', 'b', 'c'};
 
     enum PRIORITY
     {
@@ -115,13 +114,13 @@ private:
     };
 
 
-    int is_in_dtran(std::vector<std::set<size_t>>& dtran, std::set<size_t>& T)
-    {
-        for (size_t i = 0; i < dtran.size(); ++i) {
-            if (T == dtran[i]) return int(i);
-        }
-        return -1;
-    }
+    // int is_in_dtran(std::vector<std::set<size_t>>& dtran, std::set<size_t>& T)
+    // {
+    //     for (size_t i = 0; i < dtran.size(); ++i) {
+    //         if (T == dtran[i]) return int(i);
+    //     }
+    //     return -1;
+    // }
 
     void calc(std::stack<char>& op, std::stack<Nfa>& val)
     {
